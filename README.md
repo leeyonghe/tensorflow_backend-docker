@@ -28,57 +28,57 @@
 
 [![License](https://img.shields.io/badge/License-BSD3-lightgrey.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-# TensorFlow Backend with Docker
+# TensorFlow Backend with Docker / TensorFlow 백엔드와 Docker
 
 > 이 프로젝트는 NVIDIA의 [Triton Inference Server](https://github.com/triton-inference-server/server)를 기반으로 하며, TensorFlow 백엔드를 Docker 환경에서 실행할 수 있도록 구성한 것입니다.
-> 
-> 원본 프로젝트의 라이센스는 BSD 3-Clause License를 따릅니다. 자세한 내용은 [원본 라이센스](https://github.com/triton-inference-server/server/blob/main/LICENSE)를 참조하세요.
+> This project is based on NVIDIA's [Triton Inference Server](https://github.com/triton-inference-server/server) and is configured to run TensorFlow backend in a Docker environment.
 
 이 프로젝트는 TensorFlow 모델을 Triton Inference Server를 통해 서빙하는 분산 시스템을 Docker 환경에서 구성한 것입니다.
 
-## 시스템 구성
+## 시스템 구성 / System Architecture
 
 시스템은 다음과 같은 주요 컴포넌트로 구성되어 있습니다:
+The system consists of the following main components:
 
 1. **Nginx (API Gateway)**
-   - 포트: 80, 443
-   - SSL 지원
-   - 로드 밸런싱 기능
+   - 포트: 80, 443 / Ports: 80, 443
+   - SSL 지원 / SSL support
+   - 로드 밸런싱 기능 / Load balancing functionality
 
 2. **Triton Inference Server Cluster (3개 노드)**
-   - 각 서버는 독립적인 GPU 리소스를 사용
-   - HTTP, gRPC, Metrics 포트 제공
-   - 모델 자동 로드 기능 (30초 간격)
+   - 각 서버는 독립적인 GPU 리소스를 사용 / Each server uses independent GPU resources
+   - HTTP, gRPC, Metrics 포트 제공 / Provides HTTP, gRPC, and Metrics ports
+   - 모델 자동 로드 기능 (30초 간격) / Automatic model loading (30-second interval)
 
 3. **Monitoring Stack**
-   - Prometheus: 메트릭 수집
-   - Grafana: 대시보드 시각화
+   - Prometheus: 메트릭 수집 / Metric collection
+   - Grafana: 대시보드 시각화 / Dashboard visualization
 
 4. **Model Management Service**
-   - 모델 다운로드 및 배포 관리
-   - Triton 서버와 통신하여 모델 리로드
+   - 모델 다운로드 및 배포 관리 / Model download and deployment management
+   - Triton 서버와 통신하여 모델 리로드 / Communicates with Triton server for model reloading
 
-## 환경 요구사항
+## 환경 요구사항 / Environment Requirements
 
 - Docker
-- NVIDIA GPU 드라이버
+- NVIDIA GPU 드라이버 / NVIDIA GPU driver
 - NVIDIA Container Toolkit (nvidia-docker2)
-- 최소 3개의 GPU (Triton 서버당 1개)
+- 최소 3개의 GPU (Triton 서버당 1개) / Minimum 3 GPUs (1 per Triton server)
 
-## 설치 및 실행
+## 설치 및 실행 / Installation and Execution
 
-1. **환경 변수 설정**
+1. **환경 변수 설정 / Set Environment Variables**
 ```bash
 export MODEL_REPOSITORY=/models
 export TRITON_SERVERS=triton:8000
 ```
 
-2. **Docker Compose로 실행**
+2. **Docker Compose로 실행 / Run with Docker Compose**
 ```bash
 docker-compose up -d
 ```
 
-## 서비스 포트
+## 서비스 포트 / Service Ports
 
 - Nginx: 80, 443
 - Triton Server 1: 8000-8002
@@ -87,24 +87,26 @@ docker-compose up -d
 - Prometheus: 9090
 - Grafana: 3000
 
-## 모델 관리
+## 모델 관리 / Model Management
 
-### 모델 다운로드 및 배포
+### 모델 다운로드 및 배포 / Model Download and Deployment
 
 Model Manager 서비스는 다음과 같은 기능을 제공합니다:
+The Model Manager service provides the following features:
 
-1. **모델 다운로드**
-   - TensorFlow 모델을 자동으로 다운로드
-   - SavedModel 형식으로 저장
-   - config.pbtxt 파일 자동 생성
+1. **모델 다운로드 / Model Download**
+   - TensorFlow 모델을 자동으로 다운로드 / Automatically downloads TensorFlow models
+   - SavedModel 형식으로 저장 / Stores in SavedModel format
+   - config.pbtxt 파일 자동 생성 / Automatically generates config.pbtxt file
 
-2. **모델 배포**
-   - Triton 서버에 모델 자동 배포
-   - 모델 변경 시 자동 리로드
+2. **모델 배포 / Model Deployment**
+   - Triton 서버에 모델 자동 배포 / Automatically deploys models to Triton server
+   - 모델 변경 시 자동 리로드 / Automatic reload on model changes
 
-### 모델 구성
+### 모델 구성 / Model Configuration
 
 각 모델은 다음 구조로 저장됩니다:
+Each model is stored in the following structure:
 ```
 /models
   └── [model_name]
@@ -113,25 +115,28 @@ Model Manager 서비스는 다음과 같은 기능을 제공합니다:
       └── config.pbtxt
 ```
 
-## 모니터링
+## 모니터링 / Monitoring
 
 1. **Prometheus**
-   - 메트릭 수집 및 저장
-   - 기본 포트: 9090
+   - 메트릭 수집 및 저장 / Metric collection and storage
+   - 기본 포트: 9090 / Default port: 9090
 
 2. **Grafana**
-   - 대시보드 시각화
-   - 기본 포트: 3000
-   - 기본 로그인: admin/admin
+   - 대시보드 시각화 / Dashboard visualization
+   - 기본 포트: 3000 / Default port: 3000
+   - 기본 로그인: admin/admin / Default login: admin/admin
 
-## 네트워크 구성
+## 네트워크 구성 / Network Configuration
 
 - 모든 서비스는 `inference_network` 브릿지 네트워크를 통해 통신
+  All services communicate through the `inference_network` bridge network
 - 내부 통신은 서비스 이름으로 접근 가능 (예: triton:8000)
+  Internal communication is accessible via service names (e.g., triton:8000)
 
-## GPU 설정
+## GPU 설정 / GPU Configuration
 
 각 Triton 서버는 독립적인 GPU를 사용하도록 구성되어 있습니다:
+Each Triton server is configured to use an independent GPU:
 ```yaml
 deploy:
   resources:
@@ -142,27 +147,28 @@ deploy:
           capabilities: [gpu]
 ```
 
-## 문제 해결
+## 문제 해결 / Troubleshooting
 
-1. **모델 로드 실패**
-   - Model Manager 로그 확인
-   - Triton 서버 로그 확인
-   - 모델 저장소 권한 확인
+1. **모델 로드 실패 / Model Load Failure**
+   - Model Manager 로그 확인 / Check Model Manager logs
+   - Triton 서버 로그 확인 / Check Triton server logs
+   - 모델 저장소 권한 확인 / Check model repository permissions
 
-2. **GPU 관련 문제**
-   - NVIDIA 드라이버 버전 확인
-   - nvidia-docker2 설치 확인
-   - GPU 할당 확인
+2. **GPU 관련 문제 / GPU-related Issues**
+   - NVIDIA 드라이버 버전 확인 / Check NVIDIA driver version
+   - nvidia-docker2 설치 확인 / Check nvidia-docker2 installation
+   - GPU 할당 확인 / Check GPU allocation
 
-## 보안
+## 보안 / Security
 
-- SSL/TLS 지원
-- Grafana 기본 비밀번호 변경 권장
-- 내부 네트워크 격리
+- SSL/TLS 지원 / SSL/TLS support
+- Grafana 기본 비밀번호 변경 권장 / Recommended to change default Grafana password
+- 내부 네트워크 격리 / Internal network isolation
 
-## 라이센스
+## 라이센스 / License
 
 이 프로젝트는 MIT 라이센스 하에 배포됩니다.
+This project is distributed under the MIT License.
 
 # TensorFlow 백엔드
 
@@ -378,6 +384,3 @@ parameters: {
 
 ## 중요 참고사항
 * SavedModel 형식에서 모델 로드 및 언로드 중에 메모리 증가 문제를 관찰했습니다. 이는 실제 메모리 누수가 아닐 수 있으며, 시스템의 malloc 휴리스틱으로 인해 메모리가 운영 체제에 즉시 반환되지 않는 결과일 수 있습니다. 기본 malloc 라이브러리를 [tcmalloc](https://github.com/google/tcmalloc) 또는 [jemalloc](https://github.com/jemalloc/jemalloc)로 교체하면 메모리 사용량이 개선되는 것을 확인했습니다. tcmalloc 또는 jemalloc을 Triton과 함께 사용하는 방법에 대한 지침은 [문서](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_management.md#model-control-mode-explicit)를 참조하세요.
-
-
-docker run -e MODEL_REPOSITORY=/models -e TRITON_SERVERS=triton:8000 -v $(pwd)/models:/models your-model-manager-image
