@@ -1,26 +1,160 @@
 version: '3.8'
 
 services:
-  tensorflow_backend:
+  # API Gateway (Load Balancer)
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - triton_server_1
+      - triton_server_2
+      - triton_server_3
+    networks:
+      - inference_network
+
+  # Triton Server Cluster
+  triton_server_1:
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - .:/workspace
-    working_dir: /workspace
+      - ./models:/models
+      - ./model_configs:/model_configs
     environment:
-      - PYTHONPATH=/workspace
-    command: /bin/bash
-    tty: true
-    stdin_open: true
+      - TRITON_SERVER_HTTP_PORT=8000
+      - TRITON_SERVER_GRPC_PORT=8001
+      - TRITON_SERVER_METRICS_PORT=8002
+      - TRITON_SERVER_MODEL_CONTROL_MODE=poll
+      - TRITON_SERVER_REPOSITORY_POLL_SECS=30
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
+    command: >
+      tritonserver 
+      --model-repository=/models 
+      --backend-config=tensorflow,version=2
+      --model-control-mode=poll
+      --repository-poll-secs=30
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all
+              count: 1
               capabilities: [gpu]
+    networks:
+      - inference_network
+
+  triton_server_2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./models:/models
+      - ./model_configs:/model_configs
+    environment:
+      - TRITON_SERVER_HTTP_PORT=8000
+      - TRITON_SERVER_GRPC_PORT=8001
+      - TRITON_SERVER_METRICS_PORT=8002
+      - TRITON_SERVER_MODEL_CONTROL_MODE=poll
+      - TRITON_SERVER_REPOSITORY_POLL_SECS=30
+    ports:
+      - "8003:8000"
+      - "8004:8001"
+      - "8005:8002"
+    command: >
+      tritonserver 
+      --model-repository=/models 
+      --backend-config=tensorflow,version=2
+      --model-control-mode=poll
+      --repository-poll-secs=30
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - inference_network
+
+  triton_server_3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./models:/models
+      - ./model_configs:/model_configs
+    environment:
+      - TRITON_SERVER_HTTP_PORT=8000
+      - TRITON_SERVER_GRPC_PORT=8001
+      - TRITON_SERVER_METRICS_PORT=8002
+      - TRITON_SERVER_MODEL_CONTROL_MODE=poll
+      - TRITON_SERVER_REPOSITORY_POLL_SECS=30
+    ports:
+      - "8006:8000"
+      - "8007:8001"
+      - "8008:8002"
+    command: >
+      tritonserver 
+      --model-repository=/models 
+      --backend-config=tensorflow,version=2
+      --model-control-mode=poll
+      --repository-poll-secs=30
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - inference_network
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - inference_network
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    networks:
+      - inference_network
+
+  # Model Management Service
+  model_manager:
+    image: your-model-manager-image
+    volumes:
+      - ./models:/models
+    working_dir: /app
+    command: python model_manager.py
+    environment:
+      - MODEL_REPOSITORY=/models
+      - TRITON_SERVERS=triton:8000
+    networks:
+      - inference_network
 
 networks:
-  default:
+  inference_network:
     driver: bridge 
